@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset=utf-8 />
+    <title>Leaflet Draw</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.js'></script>
+    <link href='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.css' rel='stylesheet' />
+    <style>
+    <style> body {
+        margin: 0;
+        padding: 0;
+    }
+    
+    #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+    }
+    
+    .submit {
+        position: absolute;
+    }
+    </style>
+</head>
+
+<body>
+    <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-draw/v0.2.3/leaflet.draw.css' rel='stylesheet' />
+    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-draw/v0.2.3/leaflet.draw.js'></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <div id='map'></div>
+    <button class="submit">GetNewJeoGSON</button>
+    <script>
+    var file = 'pakistan.geojson';
+    var geojson;
+    var coordinates;
+
+    var circle_options = {
+        color: '#fff', // Stroke color
+        opacity: 1, // Stroke opacity
+        weight: 10, // Stroke weight
+        fillColor: '#000', // Fill color
+        fillOpacity: 0.6 // Fill opacity
+    };
+
+
+    $.getJSON(file, function(response) {
+        geojson = response;
+        //console.log(geojson) ;
+        console.log(geojson.features[0].geometry.coordinates);
+        //console.log(JSON.stringify(geojson.features[0].geometry.coordinates[11])) ;
+        coordinates = geojson.features[0].geometry.coordinates[0][0];
+
+        loadcoordinates();
+    });
+
+    L.mapbox.accessToken = 'pk.eyJ1IjoiZGlnaXRhbGdsb2JlIiwiYSI6ImNpZnB2bWUzNDZoczlzaWtxMmd2bDc3ZHQifQ.AHiF6mR5aXL0rdI4eLz2dA';
+    var map = L.mapbox.map('map', 'mapbox.streets')
+        .setView([38.89399, -77.03659], 2);
+
+    var featureGroup = L.featureGroup().addTo(map);
+    var markers = L.featureGroup().addTo(map);
+
+
+    var drawControl = new L.Control.Draw({
+        edit: {
+            featureGroup: featureGroup
+        }
+    }).addTo(map);
+
+    map.on('draw:created', function(e) {
+        var type = e.layerType,
+            layer = e.layer;
+
+        calculatewithinbounding(layer._latlngs);
+
+
+        featureGroup.addLayer(e.layer)
+    });
+
+    function loadlayer() {
+        var featLayer = L.mapbox.featureLayer().addTo(map);
+        featLayer.loadURL(file);
+    }
+
+    function calculatewithinbounding(bb) {
+        var ix = bb[0].lat;
+        var iy = bb[0].lng;
+        var ax = bb[2].lat;
+        var ay = bb[2].lng;
+
+        var circle_one = L.circle([ix, iy], 20, circle_options).addTo(featureGroup);
+        var circle_two = L.circle([ax, ay], 20, circle_options).addTo(featureGroup);
+
+        var size = coordinates.length;
+
+        for (var i = 0; i < size; i++) {
+            var x = coordinates[i][1]; // lat
+            var y = coordinates[i][0]; // lng
+
+            if (ix <= x && x <= ax && iy <= y && y <= ay) {
+                coordinates[i] = 0;
+            }
+        }
+
+        cleanupcoordinates();
+        loadcoordinates();
+
+    }
+
+    function cleanupcoordinates() {
+        var size = coordinates.length;
+        var newcoordinates = [];
+        for (var i = 0; i < size; i++) {
+            if (coordinates[i] == 0) {} else {
+                newcoordinates.push(coordinates[i]);
+            }
+        }
+
+        coordinates = newcoordinates;
+
+        clearmap();
+    }
+
+    function loadcoordinates() {
+        var size = coordinates.length;
+        for (var i = 0; i < size; i++) {
+            var x = coordinates[i][1]; // lat
+            var y = coordinates[i][0]; // lng
+            L.circle([x, y], 20, circle_options).addTo(featureGroup);
+        }
+
+    }
+
+    $('.submit').click(function() {
+        console.log(coordinates.length);
+        console.log(JSON.stringify(coordinates));
+    });
+
+    function clearmap() {
+        map.removeLayer(featureGroup);
+
+        featureGroup = L.featureGroup().addTo(map);
+        map.addLayer(featureGroup);
+    }
+    </script>
+</body>
+
+</html>
