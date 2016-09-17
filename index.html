@@ -1,7 +1,7 @@
 <style>
 .openseadragon-container img {
 	padding-top: 5px !important;
-	padding-right: 5px !important;
+	padding-left: 5px !important;
 }
 </style>
 
@@ -33,6 +33,10 @@
 	});
 
 	var mleft, mright, mup, mdown;
+	var booleanleft = false;
+	var booleanright = false;
+	var booleanup = false;
+	var booleandown = false;
 
 	function onEnter (event) {
 		within = true;
@@ -44,6 +48,10 @@
 		clearInterval(mleft);
 		clearInterval(mup);
 		clearInterval(mdown);
+		booleanright = false;
+		booleanleft = false;
+		booleanup = false;
+		booleandown = false;
 	}
 
 	var MOVE_HORIZONTAL_INTERVAL = 0.0003;
@@ -52,31 +60,57 @@
 
 	function onMove (event) {
 		if (within) {
-			clearInterval(mright);
-			clearInterval(mleft);
-			clearInterval(mup);
-			clearInterval(mdown);
 			var zoom = viewer.viewport.getZoom();
-			// console.log(viewer.viewport.viewportToImageZoom(zoom));
 
 			var x = imagingHelper.physicalToLogicalX(event.position.x);
 			var y = imagingHelper.physicalToLogicalX(event.position.y);
 
+			// To move image left
 			if (event.position.x < widthLeftLimit) {
-				moveLeft();
-				mleft = setInterval(moveLeft, MOVE_TIME);
+				if (booleanleft === false) {
+					mleft = setInterval(moveLeft, MOVE_TIME);
+					booleanleft = true;
+				}
 			}
+			else if (event.position.x >= widthLeftLimit) {
+				clearInterval(mleft);
+				booleanleft = false;
+			}
+
+			// To move image right
 			if (event.position.x > widthRightLimit) {
-				moveRight();
-				mright = setInterval(moveRight, MOVE_TIME);
+				if (booleanright === false) {
+					mright = setInterval(moveRight, MOVE_TIME);
+					booleanright = true;
+				}
 			}
+			else if (event.position.x <= widthRightLimit) {
+				clearInterval(mright);
+				booleanright = false;
+			}
+
+			// To move image up
 			if (event.position.y < heightUpLimit) {
-				moveUp();
-				mup = setInterval(moveUp, MOVE_TIME);
+				if (booleanup === false) {
+					mup = setInterval(moveUp, MOVE_TIME);
+					booleanup = true;
+				}
 			}
+			else if (event.position.y >= heightUpLimit) {
+				clearInterval(mup);
+				booleanup = false;
+			}
+
+			// To move image down
 			if (event.position.y > heightDownLimit) {
-				moveDown();
-				mdown = setInterval(moveDown, MOVE_TIME);
+				if (booleandown === false) {
+					mdown = setInterval(moveDown, MOVE_TIME);
+					booleandown = true;
+				}
+			}
+			else if (event.position.y <= heightDownLimit) {
+				clearInterval(mdown);
+				booleandown = false;
 			}
 		}
 	}
@@ -108,7 +142,6 @@
 		calculateDimentions();
 	});
 
-
 	$(window).on('resize', function () {
 		calculateDimentions();
 	});
@@ -123,6 +156,5 @@
 
 		heightUpLimit = (height / 8);
 		heightDownLimit = height - heightUpLimit;
-		console.log(heightUpLimit, heightDownLimit);
 	}
 </script>
