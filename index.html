@@ -12,7 +12,7 @@
 <script src="./openseadragon/openseadragon-viewerinputhook.min.js"></script>
 <script type="text/javascript">
 	var within = false;
-	var canvas, width, height, widthLeftLimit, widthRightLimit, heightTopLimit, heightBottomLimit;
+	var canvas, width, height, widthLeftLimit, widthRightLimit, heightUpLimit, heightDownLimit;
 
 	var viewer = OpenSeadragon({
 			id: "openseadragon1",
@@ -32,10 +32,7 @@
 		// onImageViewChanged: onImageViewChanged
 	});
 
-	calculateDimentions();
-
-	var mleft;
-	var mright;
+	var mleft, mright, mup, mdown;
 
 	function onEnter (event) {
 		within = true;
@@ -45,14 +42,20 @@
 		within = false;
 		clearInterval(mright);
 		clearInterval(mleft);
+		clearInterval(mup);
+		clearInterval(mdown);
 	}
 
-	var moveInterval = 0.0003;
+	var MOVE_HORIZONTAL_INTERVAL = 0.0003;
+	var MOVE_VERTICAL_INTERVAL = 0.0001;
+	var MOVE_TIME = 100;
 
 	function onMove (event) {
 		if (within) {
 			clearInterval(mright);
 			clearInterval(mleft);
+			clearInterval(mup);
+			clearInterval(mdown);
 			var zoom = viewer.viewport.getZoom();
 			// console.log(viewer.viewport.viewportToImageZoom(zoom));
 
@@ -60,54 +63,66 @@
 			var y = imagingHelper.physicalToLogicalX(event.position.y);
 
 			if (event.position.x < widthLeftLimit) {
-				var point = new OpenSeadragon.Point(-moveInterval,0)
-				viewer.viewport.panBy(point);
-
-				mleft = setInterval(moveLeft, 100);
+				moveLeft();
+				mleft = setInterval(moveLeft, MOVE_TIME);
 			}
 			if (event.position.x > widthRightLimit) {
-				var point = new OpenSeadragon.Point(moveInterval,0)
-				viewer.viewport.panBy(point);
-
-				mright = setInterval(moveRight, 100);
+				moveRight();
+				mright = setInterval(moveRight, MOVE_TIME);
+			}
+			if (event.position.y < heightUpLimit) {
+				moveUp();
+				mup = setInterval(moveUp, MOVE_TIME);
+			}
+			if (event.position.y > heightDownLimit) {
+				moveDown();
+				mdown = setInterval(moveDown, MOVE_TIME);
 			}
 		}
 	}
 
 	function moveDown () {
-		var point = new OpenSeadragon.Point(0,moveInterval)
+		var point = new OpenSeadragon.Point(0,MOVE_VERTICAL_INTERVAL)
 		viewer.viewport.panBy(point);
+		viewer.viewport.ensureVisible();
 	}
 
 	function moveUp () {
-		var point = new OpenSeadragon.Point(0,-moveInterval)
+		var point = new OpenSeadragon.Point(0,-MOVE_VERTICAL_INTERVAL)
 		viewer.viewport.panBy(point);
+		viewer.viewport.ensureVisible();
 	}
 
 	function moveRight () {
-		var point = new OpenSeadragon.Point(moveInterval,0)
+		var point = new OpenSeadragon.Point(MOVE_HORIZONTAL_INTERVAL,0)
 		viewer.viewport.panBy(point);
 	}
 
 	function moveLeft () {
-		var point = new OpenSeadragon.Point(-moveInterval,0)
+		var point = new OpenSeadragon.Point(-MOVE_HORIZONTAL_INTERVAL,0)
 		viewer.viewport.panBy(point);
 	}
+
+	$(window).on('load', function()
+	{
+		calculateDimentions();
+	});
+
 
 	$(window).on('resize', function () {
 		calculateDimentions();
 	});
 
 	function calculateDimentions () {
-		canvas = document.getElementsByTagName('canvas')[0];
-		width = canvas.width;
-		height = canvas.height;
+		canvas = document.getElementsByClassName('openseadragon-canvas')[0];
+		width = canvas.offsetWidth;
+		height = canvas.offsetHeight;
 
 		widthLeftLimit = (width / 8);
 		widthRightLimit = width - widthLeftLimit;
 
-		heightTopLimit = (height / 8);
-		heightBottomLimit = height - heightTopLimit;
-		// console.log(heightTopLimit, heightBottomLimit);
+		heightUpLimit = (height / 8);
+		heightDownLimit = height - heightUpLimit;
+		console.log(heightUpLimit, heightDownLimit);
 	}
 </script>
