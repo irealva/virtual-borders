@@ -1,0 +1,113 @@
+<style>
+.openseadragon-container img {
+	padding-top: 5px !important;
+	padding-right: 5px !important;
+}
+</style>
+
+<div id="openseadragon1" style="width: 100%; height: 100%;"></div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+<script src="/openseadragon/openseadragon.min.js"></script>
+<script src="/openseadragon/openseadragon-imaginghelper.min.js"></script>
+<script src="/openseadragon/openseadragon-viewerinputhook.min.js"></script>
+<script type="text/javascript">
+	var within = false;
+	var canvas, width, height, widthLeftLimit, widthRightLimit, heightTopLimit, heightBottomLimit;
+
+	var viewer = OpenSeadragon({
+			id: "openseadragon1",
+			prefixUrl: "/openseadragon/images/",
+			tileSources: "./USBig.dzi",
+			constrainDuringPan: true,
+			visibilityRatio: 1
+	});
+
+	var viewerInputHook = viewer.addViewerInputHook({ hooks: [
+		{tracker: 'viewer', handler: 'moveHandler', hookHandler: onMove},
+		{tracker: 'viewer', handler: 'enterHandler', hookHandler: onEnter },
+		{tracker: 'viewer', handler: 'exitHandler', hookHandler: onExit }
+	]});
+
+	var imagingHelper = viewer.activateImagingHelper({
+		// onImageViewChanged: onImageViewChanged
+	});
+
+	calculateDimentions();
+
+	var mleft;
+	var mright;
+
+	function onEnter (event) {
+		within = true;
+	}
+
+	function onExit (event) {
+		within = false;
+		clearInterval(mright);
+		clearInterval(mleft);
+	}
+
+	var moveInterval = 0.0003;
+
+	function onMove (event) {
+		if (within) {
+			clearInterval(mright);
+			clearInterval(mleft);
+			var zoom = viewer.viewport.getZoom();
+			// console.log(viewer.viewport.viewportToImageZoom(zoom));
+
+			var x = imagingHelper.physicalToLogicalX(event.position.x);
+			var y = imagingHelper.physicalToLogicalX(event.position.y);
+
+			if (event.position.x < widthLeftLimit) {
+				var point = new OpenSeadragon.Point(-moveInterval,0)
+				viewer.viewport.panBy(point);
+
+				mleft = setInterval(moveLeft, 100);
+			}
+			if (event.position.x > widthRightLimit) {
+				var point = new OpenSeadragon.Point(moveInterval,0)
+				viewer.viewport.panBy(point);
+
+				mright = setInterval(moveRight, 100);
+			}
+		}
+	}
+
+	function moveDown () {
+		var point = new OpenSeadragon.Point(0,moveInterval)
+		viewer.viewport.panBy(point);
+	}
+
+	function moveUp () {
+		var point = new OpenSeadragon.Point(0,-moveInterval)
+		viewer.viewport.panBy(point);
+	}
+
+	function moveRight () {
+		var point = new OpenSeadragon.Point(moveInterval,0)
+		viewer.viewport.panBy(point);
+	}
+
+	function moveLeft () {
+		var point = new OpenSeadragon.Point(-moveInterval,0)
+		viewer.viewport.panBy(point);
+	}
+
+	$(window).on('resize', function () {
+		calculateDimentions();
+	});
+
+	function calculateDimentions () {
+		canvas = document.getElementsByTagName('canvas')[0];
+		width = canvas.width;
+		height = canvas.height;
+
+		widthLeftLimit = (width / 8);
+		widthRightLimit = width - widthLeftLimit;
+
+		heightTopLimit = (height / 8);
+		heightBottomLimit = height - heightTopLimit;
+		// console.log(heightTopLimit, heightBottomLimit);
+	}
+</script>
