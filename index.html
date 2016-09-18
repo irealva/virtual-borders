@@ -10,6 +10,8 @@
 <script src="./openseadragon/openseadragon.min.js"></script>
 <script src="./openseadragon/openseadragon-imaginghelper.min.js"></script>
 <script src="./openseadragon/openseadragon-viewerinputhook.min.js"></script>
+<script src="./openseadragon/openseadragon-canvas-overlay.js"></script>
+<link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet">
 <script type="text/javascript">
 	var within = false;
 	var canvas, width, height, widthLeftLimit, widthRightLimit, heightUpLimit, heightDownLimit;
@@ -28,8 +30,25 @@
 		{tracker: 'viewer', handler: 'exitHandler', hookHandler: onExit }
 	]});
 
+	// var imagingHelper = new OpenSeadragonImaging.ImagingHelper({viewer: viewer});
+
 	var imagingHelper = viewer.activateImagingHelper({
 		// onImageViewChanged: onImageViewChanged
+	});
+
+	var overlay = viewer.canvasOverlay({
+		onRedraw: function() {
+			var ctx = overlay.context2d();
+			var IMAGE_HEIGHT = viewer.world._contentSize.y;
+			var IMAGE_WIDTH = viewer.world._contentSize.x;
+			var FONT_SIZE = 75;
+			var PADDING = 10;
+
+			ctx.font = "100px Lato";
+  			ctx.fillText("United States", 0, -PADDING);
+			ctx.fillText("Mexico", 0, IMAGE_HEIGHT + FONT_SIZE + PADDING);
+		},
+		clearBeforeRedraw:true
 	});
 
 	var mleft, mright, mup, mdown;
@@ -55,18 +74,28 @@
 	}
 
 	var MOVE_HORIZONTAL_INTERVAL = 0.0003;
+	var MOVE_HORIZONTAL_INTERVAL_MAX = 0.001;
+	var MOVE_HORIZONTAL_INTERVAL_MIN = 0.0002
 	var MOVE_VERTICAL_INTERVAL = 0.0001;
-	var MOVE_TIME = 100;
+	var MOVE_TIME = 50;
 
 	function onMove (event) {
 		if (within) {
 			var zoom = viewer.viewport.getZoom();
-
 			var x = imagingHelper.physicalToLogicalX(event.position.x);
-			var y = imagingHelper.physicalToLogicalX(event.position.y);
+			var y = imagingHelper.physicalToLogicalY(event.position.y);
+
+			if (x < 0) {
+				clearInterval(mleft);
+			}
+			else if (x > 1) {
+				clearInterval(mright);
+			}
 
 			// To move image left
-			if (event.position.x < widthLeftLimit) {
+			if (event.position.x < widthLeftLimit && x > 0) {
+				MOVE_HORIZONTAL_INTERVAL = map_range(event.position.x, widthLeftLimit, 0,  MOVE_HORIZONTAL_INTERVAL_MIN, MOVE_HORIZONTAL_INTERVAL_MAX);
+
 				if (booleanleft === false) {
 					mleft = setInterval(moveLeft, MOVE_TIME);
 					booleanleft = true;
@@ -79,6 +108,8 @@
 
 			// To move image right
 			if (event.position.x > widthRightLimit) {
+				MOVE_HORIZONTAL_INTERVAL = map_range(event.position.x, widthRightLimit, width,  MOVE_HORIZONTAL_INTERVAL_MIN, MOVE_HORIZONTAL_INTERVAL_MAX);
+
 				if (booleanright === false) {
 					mright = setInterval(moveRight, MOVE_TIME);
 					booleanright = true;
@@ -151,10 +182,14 @@
 		width = canvas.offsetWidth;
 		height = canvas.offsetHeight;
 
-		widthLeftLimit = (width / 8);
+		widthLeftLimit = (width / 4);
 		widthRightLimit = width - widthLeftLimit;
 
-		heightUpLimit = (height / 8);
+		heightUpLimit = (height / 6);
 		heightDownLimit = height - heightUpLimit;
+	}
+
+	function map_range(value, low1, high1, low2, high2) {
+		return low2 + (high2 - low2) * (value - low1) / (high1 - low1);
 	}
 </script>
