@@ -1,9 +1,70 @@
+<link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet">
 <style>
 .openseadragon-container img {
 	padding-top: 5px !important;
 	padding-left: 5px !important;
 }
+
+.buttons {
+	float: right;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+}
+
+button {
+	background: transparent;
+	border: none;
+	cursor: pointer;
+    padding:0;
+
+	background-color: #e0e0e0;
+	border-radius: 999em;
+	width: 25px;
+	height: 25px;
+	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+	line-height: 1;
+	font-size: 36px;
+	position: relative;
+	cursor: pointer;
+    display: inline-flex !important;
+	/*display: inline-block;*/
+}
+
+button:hover {
+    background-color: #eaeaea;
+}
+
+button i {
+    font-size: 16px;
+	color: #757575;
+    left: 0;
+    /*top: 50%;*/
+    height: 100%;
+    width: 100%;
+    text-align: center;
+    color: #FFF;
+    position: relative;
+}
+
+.material-icons {
+    font-size: 18px !important;
+}
+
+.material-icons.md-dark { color: rgba(0, 0, 0, 0.54); }
+.material-icons.md-dark.md-inactive { color: rgba(0, 0, 0, 0.26); }
+
 </style>
+
+<div class='buttons'>
+	<button type="button" id='zoomin'><i class="material-icons md-dark">&#xE145;</i></button>
+	<button type="button" id='zoomout'><i class="material-icons md-dark">&#xE15B;</i></button>
+	<button type="button" id='home'><i class="material-icons md-dark">&#xE88A;</i></button>
+    <button type="button" id='fullscreen'><i class="material-icons md-dark">&#xE5D0;</i></button>
+</div>
 
 <div id="openseadragon1" style="width: 100%; height: 100%;"></div>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
@@ -11,7 +72,6 @@
 <script src="./openseadragon/openseadragon-imaginghelper.min.js"></script>
 <script src="./openseadragon/openseadragon-viewerinputhook.min.js"></script>
 <script src="./openseadragon/openseadragon-canvas-overlay.js"></script>
-<link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet">
 <script type="text/javascript">
 	var within = false;
 	var canvas, width, height, widthLeftLimit, widthRightLimit, heightUpLimit, heightDownLimit;
@@ -21,7 +81,11 @@
 			prefixUrl: "./openseadragon/images/",
 			tileSources: "./USBig.dzi",
 			constrainDuringPan: true,
-			visibilityRatio: 1
+			visibilityRatio: 1,
+			zoomInButton:   "zoomin",
+		    zoomOutButton:  "zoomout",
+		    homeButton:     "home",
+		    fullPageButton: "fullscreen"
 	});
 
 	var viewerInputHook = viewer.addViewerInputHook({ hooks: [
@@ -51,6 +115,20 @@
 		},
 		clearBeforeRedraw:true
 	});
+
+    /* button show or hide */
+    var x;
+    document.addEventListener('mousemove', function() {
+        console.log("mousemove");
+        if (x) clearTimeout(x);
+        x = setTimeout(function()
+    	{
+    		//do something here
+    	}, 200);
+    }, false);
+
+
+    /* button show or hide */
 
 	var mleft, mright, mup, mdown;
 	var booleanleft = false;
