@@ -34,6 +34,34 @@ button {
 	/*display: inline-block;*/
 }
 
+.visible {
+    -webkit-animation: fadein 3s linear forwards;
+    animation: fadein 3s linear forwards;
+    opacity: 0;
+}
+
+.invisible {
+    -webkit-animation: fadeout 3s linear forwards;
+    animation: fadeout 3s linear forwards;
+    opacity: 1;
+}
+
+@-webkit-keyframes fadein {
+    100% { opacity: 1; }
+}
+
+@keyframes fadein {
+    100% { opacity: 1; }
+}
+
+@-webkit-keyframes fadeout {
+    100% { opacity: 0; }
+}
+
+@keyframes fadeout {
+    100% { opacity: 0; }
+}
+
 button:hover {
     background-color: #eaeaea;
 }
@@ -59,7 +87,7 @@ button i {
 
 </style>
 
-<div class='buttons'>
+<div class='buttons visible' id='button-group'>
 	<button type="button" id='zoomin'><i class="material-icons md-dark">&#xE145;</i></button>
 	<button type="button" id='zoomout'><i class="material-icons md-dark">&#xE15B;</i></button>
 	<button type="button" id='home'><i class="material-icons md-dark">&#xE88A;</i></button>
@@ -117,15 +145,32 @@ button i {
 	});
 
     /* button show or hide */
-    var x;
+    // var x = false;
+    // document.addEventListener('mousemove', function() {
+    //     console.log("mousemove");
+    //     if (x) {
+    //         clearTimeout(x);
+    //     }
+    //     x = setTimeout(function()
+    // 	{
+    //         return true;
+    // 	}, 200);
+    // }, false);
+    var timeout = null;
+
     document.addEventListener('mousemove', function() {
-        console.log("mousemove");
-        if (x) clearTimeout(x);
-        x = setTimeout(function()
-    	{
-    		//do something here
-    	}, 200);
-    }, false);
+        if (timeout !== null) {
+            var buttons = document.getElementById('button-group');
+            buttons.className = 'buttons visible'
+            clearTimeout(timeout);
+        }
+
+        timeout = setTimeout(function() {
+            var buttons = document.getElementById('button-group');
+            buttons.className = 'buttons invisible'
+            console.log("idle");
+        }, 2500);
+    });
 
 
     /* button show or hide */
